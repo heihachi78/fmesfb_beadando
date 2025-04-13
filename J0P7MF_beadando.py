@@ -121,6 +121,7 @@ parameters = {constants.PARAMETER_CONSTANT_TIMESTAMP_KEY:"timestamp_key"}
 x,y = case_statistics.get_kde_caseduration(log, parameters=parameters)
 gviz = graphs_visualizer.apply_plot(x,y,variant=graphs_visualizer.Variants.CASES)
 graphs_visualizer.view(gviz)
+graphs_visualizer.save(gviz, 'doc/case_duration.png')
 
 # %% [markdown]
 # ## Események időbeli eloszlásának vizsgálata
@@ -128,27 +129,33 @@ graphs_visualizer.view(gviz)
 # %%
 d_type = "years"
 pm4py.view_events_distribution_graph(log, distr_type=d_type, format="png")
+pm4py.save_vis_events_distribution_graph(log, 'doc/event_year_dist.png', distr_type=d_type, format="png")
 
 # %%
 d_type = "months"
 pm4py.view_events_distribution_graph(log, distr_type=d_type, format="png")
+pm4py.save_vis_events_distribution_graph(log, 'doc/event_month_dist.png', distr_type=d_type, format="png")
 
 # %%
 d_type = "hours"
 pm4py.view_events_distribution_graph(log, distr_type=d_type, format="png")
+pm4py.save_vis_events_distribution_graph(log, 'doc/event_hour_dist.png', distr_type=d_type, format="png")
 
 # %% [markdown]
 # ## Az eseményekben résztvevő resource-ok vizsgálata
 
 # %%
 pm4py.view_dotted_chart(log, format='png', attributes=['concept:name','org:resource'])
+pm4py.save_vis_dotted_chart(log, 'doc/dot_resource_event.png', format='png', attributes=['concept:name','org:resource'])
 
 # %% [markdown]
 # # Directly Folows Graph
 
 # %%
 dfg = dfg_discovery.apply(log)
-dfg_visualization.apply(dfg, log=log, variant=dfg_visualization.Variants.FREQUENCY)
+gviz = dfg_visualization.apply(dfg, log=log, variant=dfg_visualization.Variants.FREQUENCY)
+dfg_visualization.view(gviz)
+dfg_visualization.save(gviz, 'doc/dfg.png')
 
 # %% [markdown]
 # ## Heatmap
@@ -177,6 +184,7 @@ sns.heatmap(df_mtx, cmap="coolwarm", robust=True, annot=True, fmt="0000.0f")
 plt.title("Heatmap")
 plt.xlabel("Activities")
 plt.ylabel("Activities")
+plt.savefig('doc/heatmap.png', format='png', dpi=300, bbox_inches='tight')
 plt.show()
 
 # %% [markdown]
@@ -191,12 +199,15 @@ log.head()
 # %%
 am_pnet, am_im, am_fm = pm4py.discover_petri_net_alpha(log)
 pm4py.view_petri_net(am_pnet, am_im, am_fm, format='png')
+pm4py.save_vis_petri_net(am_pnet, am_im, am_fm, 'doc/alpha_miner_petri.png')
 
 # %% [markdown]
 # Furcsa, hogy a folyamatnak ugyan van eleje és vége, de olyan, mintha két részre lenne szakadva. Ez nem tűnik megfelelő hálónak, olyan, mintha két külön folyamat lenne, ami egymással nincs kapcsolatban. A valóságban 11002 esetben került sor a Fraud Investigation-re és minden esetben Claim Settlement követte.
 
 # %%
-pn_visualizer.apply(am_pnet, am_im, am_fm, log, variant=pn_visualizer.Variants.FREQUENCY, parameters={fp_visualizer.Variants.SINGLE.value.Parameters.FORMAT:'png'})
+gviz = pn_visualizer.apply(am_pnet, am_im, am_fm, log, variant=pn_visualizer.Variants.FREQUENCY, parameters={fp_visualizer.Variants.SINGLE.value.Parameters.FORMAT:'png'})
+pn_visualizer.view(gviz)
+pn_visualizer.save(gviz, 'doc/alpha_miner_petri_freq.png')
 
 # %% [markdown]
 # ## Footprint
@@ -208,18 +219,22 @@ pn_visualizer.apply(am_pnet, am_im, am_fm, log, variant=pn_visualizer.Variants.F
 # Sajnos ezt nem tudtam lefuttatni, több óra után sem ad eredményt. A furcsa Petri háló lehet az oka, de nem tudom biztosan.
 
 # %%
-fp_visualizer.apply(fp_log, parameters={fp_visualizer.Variants.SINGLE.value.Parameters.FORMAT:'png'})
-
+gviz = fp_visualizer.apply(fp_log, parameters={fp_visualizer.Variants.SINGLE.value.Parameters.FORMAT:'png'})
+fp_visualizer.view(gviz)
+fp_visualizer.save(gviz, 'doc/alpha_miner_footprint.png')
 # %%
 fp_net = footprints_discovery.apply(dfg, variant=footprints_discovery.Variants.DFG)
-fp_visualizer.apply(fp_net, parameters={fp_visualizer.Variants.SINGLE.value.Parameters.FORMAT:'png'})
-
+gviz = fp_visualizer.apply(fp_net, parameters={fp_visualizer.Variants.SINGLE.value.Parameters.FORMAT:'png'})
+fp_visualizer.view(gviz)
+fp_visualizer.save(gviz, 'doc/alpha_miner_footprint_dfg.png')
 # %% [markdown]
 # ## Átmenetek átlagos ideje
 
 # %%
 parameters = {pn_visualizer.Variants.PERFORMANCE.value.Parameters.FORMAT:'png'}
-pn_visualizer.apply(am_pnet, am_im, am_fm, parameters=parameters, variant=pn_visualizer.Variants.PERFORMANCE, log=log)
+gviz = pn_visualizer.apply(am_pnet, am_im, am_fm, parameters=parameters, variant=pn_visualizer.Variants.PERFORMANCE, log=log)
+pn_visualizer.view(gviz)
+pn_visualizer.save(gviz, 'doc/alpha_miner_performance.png')
 
 # %% [markdown]
 # ## Evaluation
@@ -277,6 +292,7 @@ simp_alpha
 # %%
 im_net, im_im, im_fm = pm4py.discover_petri_net_inductive(log)
 pm4py.view_petri_net(im_net, im_im, im_fm, format='png')
+pm4py.save_vis_petri_net(im_net, im_im, im_fm, 'doc/inductive_miner_petri.png')
 
 # %% [markdown]
 # Ezen a Petri hálón nekem sokkal inkább tűnik úgy, hogy lefedi a folyamatot és nincs is két részre szakadva. A Petri-hálóban a fekete téglalapok (telített átmenetekkel) általában láthatatlan átmeneteket jelölnek, amelyeket az Inductive Miner algoritmus vezet be a folyamatstruktúra modellezése során. Ezek az átmenetek nem megfigyelhető tevékenységek az eseménynaplóban, hanem a vezérlési folyamat logikáját segítik.
@@ -286,7 +302,9 @@ pm4py.view_petri_net(im_net, im_im, im_fm, format='png')
 
 # %%
 bpmn_graph = pm4py.discover_bpmn_inductive(log, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
-pm4py.visualization.bpmn.visualizer.apply(bpmn_graph)
+gviz =pm4py.visualization.bpmn.visualizer.apply(bpmn_graph)
+pm4py.visualization.bpmn.visualizer.view(gviz)
+pm4py.visualization.bpmn.visualizer.save(gviz,'doc/inductive_miner_bpmn.png')
 
 # %% [markdown]
 # A generált BPMN ellenben jónak tűnik, nem szakad meg sehol a folyamat, szépen végig követhető rajta hogy mi az események sorrendje.
@@ -344,7 +362,8 @@ simp_ind
 dthl = [0.25, 0.5, 0.75, 0.99]
 for dth in dthl:
     hm_net = pm4py.discover_heuristics_net(log, dependency_threshold=dth)
-    pm4py.view_heuristics_net(hm_net, format='png')
+    pm4py.view_heuristics_net(hm_net, format="png")
+    pm4py.save_vis_heuristics_net(hm_net, f'doc/heuristic_dth_{dth}.png')
 
 # %% [markdown]
 # Ez egy nagyon szép ábra, áttekinthető és helyesek rajta a számok és a folyamat is.
@@ -361,6 +380,7 @@ for mac in mac_list:
     heu_net_mac = heuristics_miner.apply_heu(log, parameters={heuristics_miner.Variants.CLASSIC.value.Parameters.MIN_ACT_COUNT: mac})
     gviz = hn_visualizer.apply(heu_net_mac)
     hn_visualizer.view(gviz)
+    hn_visualizer.save(gviz, f'doc/heuristic_mac_{mac}.png')
 
 # %% [markdown]
 # ### Minimum Directly Folows
@@ -371,6 +391,7 @@ for mdfg in mdfg_list:
     heu_net_mdfg = heuristics_miner.apply_heu(log, parameters={heuristics_miner.Variants.CLASSIC.value.Parameters.MIN_DFG_OCCURRENCES: mdfg})
     gviz = hn_visualizer.apply(heu_net_mdfg, parameters={'format':'png'})
     hn_visualizer.view(gviz)
+    hn_visualizer.save(gviz, f'doc/heuristic_mdfg_{mdfg}.png')
 
 # %% [markdown]
 # Ezek is a vártnak megfelelően néznek ki, a mdfg növelésével egyre kevesebb elem jelenik meg a gráfon, ami a folyamatot egyre magasabb szinten az egyre fontosabb eventekre koncentrálva írja le.
@@ -381,10 +402,12 @@ for mdfg in mdfg_list:
 # %%
 h_net, h_im, h_fm = pm4py.discover_petri_net_heuristics(log, dependency_threshold=0.5)
 pm4py.view_petri_net(h_net, h_im, h_fm, format='png')
+pm4py.save_vis_petri_net(h_net, h_im, h_fm, 'doc/heuristics_petri_dth_0.5.png')
 
 # %%
 h_net, h_im, h_fm = pm4py.discover_petri_net_heuristics(log, dependency_threshold=0.9)
 pm4py.view_petri_net(h_net, h_im, h_fm, format='png')
+pm4py.save_vis_petri_net(h_net, h_im, h_fm, 'doc/heuristics_petri_dth_0.9.png')
 
 # %% [markdown]
 # Nincs eltérés a generált hálóban.
@@ -457,6 +480,6 @@ ev_comp.at['simplicity','Heuristic'] = round(simp_heur,3)
 
 ev_comp = ev_comp[ev_comp.columns].astype(float)
 sns.heatmap(ev_comp, cmap='Greens',robust=True,annot=True,fmt='.2f')
-plt.savefig('Eval_comp.pdf',format='pdf',dpi=300,bbox_inches='tight')
+plt.savefig('doc/evaluation_comparision.png',format='png',dpi=300,bbox_inches='tight')
 
-
+# %%
