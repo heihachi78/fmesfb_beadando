@@ -1,7 +1,4 @@
 # %% [markdown]
-# https://github.com/process-intelligence-solutions/pm4py/blob/release/notebooks/1_event_data.ipynb
-
-# %% [markdown]
 # # Importok
 
 # %%
@@ -25,6 +22,9 @@ from pm4py.algo.evaluation.generalization import algorithm as generalization_eva
 from pm4py.algo.evaluation.simplicity import algorithm as simplicity_evaluator
 from pm4py.algo.discovery.heuristics import algorithm as heuristics_miner
 from pm4py.visualization.heuristics_net import visualizer as hn_visualizer
+from tqdm import tqdm
+import csv
+import os
 
 # %% [markdown]
 # # Fájl beolvasása
@@ -484,5 +484,119 @@ plt.title('Evaluation Comparison')
 plt.ylabel('Evaluation Metrics')
 plt.xlabel('Models')
 plt.savefig('doc/evaluation_comparision.png',format='png',dpi=300,bbox_inches='tight')
+plt.show()
+
+# %% [markdown]
+# # Frequent itemset and sequential pattern mining
 
 # %%
+cnames = hm_net.activities
+codes = []
+for i in range(0,len(cnames)): codes.append(i+1)
+name_code_dict = dict(zip(cnames,codes))
+code_name_dict = dict(zip(codes,cnames))
+
+# %%
+filt_log = log.loc[:,['case:concept:name','concept:name']]
+filt_log['Code'] = ''
+for i in range(0,len(filt_log)): filt_log.at[i,'Code'] = name_code_dict[filt_log.at[i,'concept:name']]
+filt_log
+
+# %%
+traces = list(log['case:concept:name'].values)
+traces = list(dict.fromkeys(traces))
+
+# %%
+sequences = []
+for trace in tqdm(traces):
+    fl = filt_log[filt_log['case:concept:name']==trace]
+    events = list(fl['Code'].values)
+    sequences.append(events)
+sequences
+
+# %%
+with open('files/sequences.csv','w',newline='') as f:
+    writer = csv.writer(f)
+    writer.writerows(sequences)
+
+# %%
+filename_in_spmf = 'files/sequences.csv'
+filename_out_spmf = 'files/sequences_spmf.csv'
+command = 'java -jar spmf.jar run Convert_a_sequence_database_to_SPMF_format '+filename_in_spmf+' '+filename_out_spmf+' CSV_INTEGER 100000'
+os.system(command)
+
+# %%
+def file_len(filename):
+    with open(filename) as f:
+        for i, _ in enumerate(f):
+            pass
+    return i + 1
+
+# %% [markdown]
+# ## Frequent items mining
+
+# %%
+minsup_values = [0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.15, 0.2, 0.25, 0.5]
+
+for minsup_fi in minsup_values:
+    filename_in_fi = 'files/sequences_spmf.csv'
+    filename_out_fi = 'files/fis_Apr_'+str(int(minsup_fi*100))+'.csv'
+    command = 'java -jar spmf.jar run Apriori '+filename_in_fi+' '+filename_out_fi+' '+str(minsup_fi)
+    os.system(command)
+
+pattern_counts = []
+for ms in minsup_values:
+    pattern_counts.append(file_len(f'files/fis_Apr_{str(int(ms*100))}.csv'))
+
+plt.bar([str(v) for v in minsup_values], pattern_counts)
+plt.title("Frequent Items (Apriori) vs Minimum Support")
+plt.xlabel("minimum support")
+plt.ylabel("Number of Patterns")
+plt.savefig('doc/frequent_items_apriori.png')
+plt.show()
+
+# %% [markdown]
+# ## Frequent closed itemset mining
+
+# %%
+minsup_values = [0.01, 0.02, 0.03, 0.04, 0.05, 0.1, 0.15, 0.2, 0.25, 0.5]
+
+for minsup_fci in minsup_values:
+    filename_in_fci = 'files/sequences_spmf.csv'
+    filename_out_fci = 'files/fis_AprC_'+str(int(minsup_fci*100))+'.csv'
+    command = 'java -jar spmf.jar run AprioriClose '+filename_in_fci+' '+filename_out_fci+' '+str(minsup_fci)
+    os.system(command)
+
+pattern_counts = []
+for ms in minsup_values:
+    pattern_counts.append(file_len(f'files/fis_AprC_{str(int(ms*100))}.csv'))
+
+plt.bar([str(v) for v in minsup_values], pattern_counts)
+plt.title("Frequent Closed Itemset (AprioriClose) vs Minimum Support")
+plt.xlabel("minimum support")
+plt.ylabel("Number of Patterns")
+plt.savefig('doc/frequent_closed_items_aprioriclose.png')
+plt.show()
+
+# %% [markdown]
+# ## Frequent sequential pattern mining
+
+# %%
+minsup_values = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99]
+
+for minsup_fsp in minsup_values:
+    filename_in_fsp = 'files/sequences_spmf.csv'
+    filename_out_fsp = 'files/fsp_PrefixSpan_'+str(int(minsup_fsp*100))+'.csv'
+    command = 'java -jar spmf.jar run PrefixSpan '+filename_in_fsp+' '+filename_out_fsp+' '+str(minsup_fsp)  #The command needs to be a string
+    os.system(command)
+
+pattern_counts = []
+for ms in minsup_values:
+    pattern_counts.append(file_len(f'files/fsp_PrefixSpan_{str(int(ms*100))}.csv'))
+
+plt.bar([str(v) for v in minsup_values], pattern_counts)
+plt.title("Frequent Sequential Pattern (PrefixSpan) vs Minimum Support")
+plt.xlabel("minimum support")
+plt.ylabel("Number of Patterns")
+plt.savefig('doc/frequent_sequentila_pattern_prefixspan.png')
+plt.show()
