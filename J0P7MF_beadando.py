@@ -480,6 +480,9 @@ ev_comp.at['simplicity','Heuristic'] = round(simp_heur,3)
 
 ev_comp = ev_comp[ev_comp.columns].astype(float)
 sns.heatmap(ev_comp, cmap='Greens',robust=True,annot=True,fmt='.2f')
+plt.title('Evaluation Comparison')
+plt.ylabel('Evaluation Metrics')
+plt.xlabel('Models')
 plt.savefig('doc/evaluation_comparision.png',format='png',dpi=300,bbox_inches='tight')
 
 # %%
